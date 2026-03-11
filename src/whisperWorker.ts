@@ -61,14 +61,18 @@ try {
         if (!audio) return;
 
         try {
+            console.log(`Worker: Starting transcription, audio array length: ${audio.length}`);
             const output = await transcriber(audio, {
                 return_timestamps: true,
                 chunk_length_s: 30,
             });
 
+            console.log(`Worker: Transcriber output object:`, JSON.stringify(output));
+
             if (output.text && output.text.trim()) {
                 self.postMessage({ status: 'complete', text: output.text });
             } else {
+                console.log(`Worker: Output was empty or whitespace only.`);
                 self.postMessage({ status: 'complete', text: '' });
             }
         } catch (err: any) {

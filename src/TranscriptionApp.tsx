@@ -110,13 +110,18 @@ const TranscriptionApp = () => {
           setStatus(message);
           addLog(message);
         } else if (s === 'complete') {
+          console.log(`App: Received complete status from worker. Text returned = "${t}"`);
+          console.log(`App: processingLengthRef = ${processingLengthRef.current}, buffer size before slice = ${audioBufferRef.current.length}`);
+
           // Clean up weird whisper tags like [BLANK_AUDIO]
           const cleanText = t ? t.replace(/\[.*?\]/g, '').trim() : '';
+          console.log(`App: cleanText = "${cleanText}"`);
 
           if (cleanText) {
             currentTextRef.current = cleanText;
           } else if (processingLengthRef.current > 16000) {
             // Only clear currentText if we processed a decent chunk and it's truly silent
+            console.log(`App: Audio was deemed silent. Resetting currentTextRef.`);
             currentTextRef.current = '';
           }
 
@@ -126,6 +131,7 @@ const TranscriptionApp = () => {
           // If we've processed more than 7 seconds of audio in this chunk, 
           // let's commit it and start a fresh buffer so it doesn't grow infinitely
           if (processingLengthRef.current >= 16000 * 7) {
+            console.log(`App: Buffer exceeded 7 seconds. Committing text to fullTextRef and resetting buffer.`);
             fullTextRef.current += (fullTextRef.current && currentTextRef.current ? ' ' : '') + currentTextRef.current;
             currentTextRef.current = ''; // Reset current text
             // Slice out the processed audio
@@ -202,6 +208,13 @@ const TranscriptionApp = () => {
             isProcessingRef.current = true;
             processingLengthRef.current = audioBufferRef.current.length;
             const bufferToSend = new Float32Array(audioBufferRef.current.slice(0, processingLengthRef.current));
+
+            let maxVol = 0;
+            for (let i = 0; i < bufferToSend.length; i++) {
+              if (Math.abs(bufferToSend[i]) > maxVol) maxVol = Math.abs(bufferToSend[i]);
+            }
+            console.log(`App: Sending buffer to worker. Max volume: ${maxVol.toFixed(5)}`);
+
             workerRef.current.postMessage({ audio: bufferToSend });
           }
         }
