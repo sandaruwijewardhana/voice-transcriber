@@ -93,14 +93,23 @@ const TranscriptionApp = () => {
       }).catch(console.error);
     };
 
-    // First attempt
+    // The Ultimate Bypass for Chromium device enumeration sandbox:
+    // Chromium will almost never return hardware labels or full lists until
+    // an actual stream has been granted AND attached/consumed.
     navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      stream.getTracks().forEach(t => t.stop());
-      fetchDevices();
+      // Create a dummy audio element to consume the stream for 100ms
+      const dummy = document.createElement('audio');
+      dummy.muted = true;
+      dummy.srcObject = stream;
+      dummy.play().catch(() => { });
+
+      setTimeout(() => {
+        stream.getTracks().forEach(t => t.stop());
+        dummy.remove();
+        fetchDevices();
+      }, 500);
     }).catch(console.error);
 
-    // Some operating systems / chromium versions require a polling
-    // delay to unlock the full hardware topology.
     setTimeout(fetchDevices, 1500);
     setTimeout(fetchDevices, 3000);
   }, []);
