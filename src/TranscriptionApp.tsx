@@ -85,14 +85,24 @@ const TranscriptionApp = () => {
   const currentTextRef = useRef('');
 
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-      stream.getTracks().forEach(t => t.stop());
+    const fetchDevices = () => {
       navigator.mediaDevices.enumerateDevices().then(devs => {
         const audioInputs = devs.filter(d => d.kind === 'audioinput');
         setDevices(audioInputs);
-        if (audioInputs.length > 0) setSelectedDeviceId(audioInputs[0].deviceId);
-      });
+        if (audioInputs.length > 0 && !selectedDeviceId) setSelectedDeviceId(audioInputs[0].deviceId);
+      }).catch(console.error);
+    };
+
+    // First attempt
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+      stream.getTracks().forEach(t => t.stop());
+      fetchDevices();
     }).catch(console.error);
+
+    // Some operating systems / chromium versions require a polling
+    // delay to unlock the full hardware topology.
+    setTimeout(fetchDevices, 1500);
+    setTimeout(fetchDevices, 3000);
   }, []);
 
   const setListening = (val: boolean) => {

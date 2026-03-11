@@ -30,6 +30,7 @@ const createWindow = () => {
             contextIsolation: true,
             devTools: false, // Turned off for production
             backgroundThrottling: false,
+            webSecurity: false
         },
     });
 
@@ -41,7 +42,6 @@ const createWindow = () => {
     mainWindow.webContents.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
 
-    // Handle Mic Permissions for production EXE
     mainWindow.webContents.session.setPermissionCheckHandler((webContents, permission) => {
         if (permission === 'media') return true;
         return false;
