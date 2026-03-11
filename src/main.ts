@@ -1,4 +1,4 @@
-import { app, BrowserWindow, session } from 'electron';
+import { app, BrowserWindow, session, screen } from 'electron';
 import path from 'path';
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
@@ -10,13 +10,20 @@ app.commandLine.appendSwitch('ignore-certificate-errors'); // For potential prox
 app.commandLine.appendSwitch('no-sandbox'); // Sometimes needed for WASM in Electron
 
 const createWindow = () => {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width } = primaryDisplay.workAreaSize;
+    const windowWidth = 340;
+    const windowHeight = 160;
+
     const mainWindow = new BrowserWindow({
-        width: 480,
-        height: 340, // Taller for logs and text
+        width: windowWidth,
+        height: windowHeight,
+        x: Math.round(width / 2 - windowWidth / 2),
+        y: 20,
         frame: false,
         transparent: true,
         alwaysOnTop: true,
-        resizable: true, // Allow resize for debugging
+        resizable: false, // fixed small size
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
